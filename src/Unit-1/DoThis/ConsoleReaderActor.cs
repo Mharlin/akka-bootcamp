@@ -10,30 +10,31 @@ namespace WinTail
     class ConsoleReaderActor : UntypedActor
     {
         public const string ExitCommand = "exit";
-        private ActorRef _consoleWriterActor;
-
-        public ConsoleReaderActor(ActorRef consoleWriterActor)
-        {
-            _consoleWriterActor = consoleWriterActor;
-        }
+        public const string StartCommand = "start";
 
         protected override void OnReceive(object message)
         {
-            var read = Console.ReadLine();
-            if (!string.IsNullOrEmpty(read) && read.ToLowerInvariant().Equals(ExitCommand))
+            if (message.Equals(StartCommand))
+                DoPrintInstruction();
+
+            GetAndValidateInput();
+        }
+
+        private void GetAndValidateInput()
+        {
+            var message = Console.ReadLine();
+            if (!string.IsNullOrEmpty(message) && message.ToLowerInvariant().Equals(ExitCommand))
             {
-                // shut down the system (acquire handle to system via
-                // this actors context)
                 Context.System.Shutdown();
                 return;
             }
 
-            // send input to the console writer to process and print
-            // YOU NEED TO FILL IN HERE
-
-            // continue reading messages from the console
-            // YOU NEED TO FILL IN HERE
+            Context.ActorSelection("/user/validationActor").Tell(message);
         }
 
+        private void DoPrintInstruction()
+        {
+            Console.WriteLine("Please provide the URI of a log file on disk.\n");
+        }
     }
 }
